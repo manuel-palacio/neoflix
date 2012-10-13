@@ -9,7 +9,7 @@ import org.mortbay.jetty.servlet.ServletHolder
 
 class Main {
 
-    static void main(String[] args) {
+    public static void main(String[] args) {
         String webPort = System.getenv("PORT");
         if (webPort == null || webPort.isEmpty()) {
             webPort = "8080";
