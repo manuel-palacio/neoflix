@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>neo4j_movies</groupId>
     <artifactId>neo4j_movies</artifactId>
-    <packaging>war</packaging>
+    <packaging>jar</packaging>
     <version>1.0</version>
     <name>neo4j_movies Maven Webapp</name>
     <url>http://maven.apache.org</url>
