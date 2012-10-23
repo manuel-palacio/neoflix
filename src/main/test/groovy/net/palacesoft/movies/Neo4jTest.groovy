@@ -23,7 +23,7 @@ public class Neo4jTest {
     GraphDatabase graphDatabase
 
     @Test
-    public void populateDB() {
+    public void checkDB() {
 
         Neo4jTemplate neo = new Neo4jTemplate(graphDatabase)
 
@@ -32,6 +32,36 @@ public class Neo4jTest {
 
         println result
 
+
+    }
+
+    @Test
+    public void getRecommendations() {
+        Neo4jTemplate neo = new Neo4jTemplate(graphDatabase)
+        def script = """
+                    m = [:];
+                    x = [] as Set;
+                    v = g.v(node_id);
+                    v.
+                    out('hasGenera').
+                    aggregate(x).
+                    back(2).
+                    inE('rated').
+                    filter{it.getProperty('stars') > 3}.
+                    outV.
+                    outE('rated').
+                    filter{it.getProperty('stars') > 3}.
+                    inV.
+                    filter{it != v}.
+                    filter{it.out('hasGenera').toSet().equals(x)}.
+                    groupCount(m){"\${it.id}:\${it.title.replaceAll(',',' ')}\"}.iterate();
+
+                    m.sort{a,b -> b.value <=> a.value}[0..24];"""
+
+
+        def result = neo.execute(script, ["node_id": 160]).to(Map.class).single()
+
+        print result
 
     }
 

@@ -5,14 +5,14 @@ import com.sun.jersey.spi.resource.Singleton
 
 import javax.ws.rs.GET
 import javax.ws.rs.Path
-import javax.ws.rs.PathParam
 import javax.ws.rs.core.Response
 import javax.annotation.PostConstruct
 import org.springframework.data.neo4j.rest.SpringRestGraphDatabase
 import org.springframework.data.neo4j.support.Neo4jTemplate
 import org.springframework.data.neo4j.core.GraphDatabase
+import javax.ws.rs.QueryParam
 
-@Path("/movie")
+@Path("/show")
 @Singleton
 class MovieResource {
 
@@ -77,12 +77,36 @@ class MovieResource {
 
     }
 
+    private def getRecommendations(int id) {
+        def script = """
+                m = [:];
+                x = [] as Set;
+                v = g.v(node_id);
+                v.
+                out('hasGenera').
+                aggregate(x).
+                back(2).
+                inE('rated').
+                filter{it.getProperty('stars') > 3}.
+                outV.
+                outE('rated').
+                filter{it.getProperty('stars') > 3}.
+                inV.
+                filter{it != v}.
+                filter{it.out('hasGenera').toSet().equals(x)}.
+                groupCount(m){"\${it.id}:\${it.title.replaceAll(',',' ')}\"}.iterate();
+
+                m.sort{a,b -> b.value <=> a.value}[0..24];"""
+
+
+        Map result = neo4jTemplate.execute(script, ["node_id": id]).to(Map.class).single()
+    }
+
 
     @GET
-    @Path("{id}")
-    public Response getMovie(@PathParam("id") String id) {
+    public Response getMovie(@QueryParam("id") String id) {
 
-        new ResponseBuilderImpl().entity("hello").status(200).build()
+        new ResponseBuilderImpl().entity("hello" + id).status(200).build()
 
     }
 }
