@@ -11,6 +11,8 @@ import org.springframework.data.neo4j.rest.SpringRestGraphDatabase
 import org.springframework.data.neo4j.support.Neo4jTemplate
 import org.springframework.data.neo4j.core.GraphDatabase
 import javax.ws.rs.QueryParam
+import org.neo4j.rest.graphdb.entity.RestNode
+import org.apache.commons.lang.StringEscapeUtils
 
 @Path("/show")
 @Singleton
@@ -77,7 +79,7 @@ class MovieResource {
 
     }
 
-    private def getRecommendations(int id) {
+    private def getRecommendations(long id) {
         def script = """
                 m = [:];
                 x = [] as Set;
@@ -100,13 +102,55 @@ class MovieResource {
 
 
         Map result = neo4jTemplate.execute(script, ["node_id": id]).to(Map.class).single()
-    }
 
+        if (!result || result.empty) {
+
+            return "[{id: ${id},name: No Recommendations, values:[{id:${id}, name:No Recommendations}]}]"
+        }
+
+        def jsonResult = result.collect() {
+            """{"id":"${it.key.toString().split(":")[0]}","name":"${it.key.toString().split(":")[1]}"}"""
+        }
+
+        return """[{"id":"${id}" ,"name":"Recommendations","values":[${jsonResult.join(",")}]}]"""
+
+
+    }
 
     @GET
     public Response getMovie(@QueryParam("id") String id) {
+        RestNode node
+        if (id.isNumber()) {
+            node = neo4jTemplate.execute("g.v(${id});", null).to(RestNode.class).single()
+        } else {
+            node = neo4jTemplate.execute("g.idx(Tokens.T.v)[[title:'${URLDecoder.decode(id)}']].next();", null).to(RestNode.class).single()
 
-        new ResponseBuilderImpl().entity("hello" + id).status(200).build()
+        }
+
+
+        def json = "{}"
+        if (node) {
+            json = """{"details_html": "HTML",
+               "data": {"attributes": ${getRecommendations(node.getId())},
+                         "name": "${getName(node)}",
+                         "id": "${id}"}}"""
+        }
+
+
+        new ResponseBuilderImpl().entity(json.toString()).status(200).build()
+
+    }
+
+    private def getName(RestNode node) {
+        def type = node.getProperty("type")
+
+        switch (type) {
+            case "Movie": return node.getProperty("title")
+            case "Occupation": return node.getProperty("occupation")
+            case "User": return """"{"${node.getProperty("userId")}"} "Gender": "${node.getProperty("gender")}" "Age": "${node.getProperty("age")}"}"""
+            case "Genera": return node.getProperty("genera")
+        }
+
 
     }
 }

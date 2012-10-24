@@ -13,7 +13,8 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertThat
+import org.neo4j.rest.graphdb.entity.RestNode;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(locations = "classpath:applicationContext.xml")
@@ -59,9 +60,21 @@ public class Neo4jTest {
                     m.sort{a,b -> b.value <=> a.value}[0..24];"""
 
 
-        def result = neo.execute(script, ["node_id": 160]).to(Map.class).single()
+        RestNode node = neo.execute("g.idx(Tokens.T.v)[[title:'Toy Story (1995)']].next();", null).to(RestNode.class).single()
 
-        print result
+        int id =  node.getProperty("movieId") as Integer;
+
+        def result = neo.execute(script, ["node_id": node.getId()]).to(Map.class).single()
+
+        if (!result || result.empty) {
+            println "[{id: ${id},name: No Recommendations, values:[{id:${id}, name:No Recommendations}]}]"
+        }
+
+        def jsonResult = result.collect() {
+            "{id:${it.key.toString().split(":")[0]},name:${it.key.toString().split(":")[1]}}"
+        }
+
+        println "[{id:${id} ,name:Recommendations,values:${jsonResult.join(",")} }]"
 
     }
 
