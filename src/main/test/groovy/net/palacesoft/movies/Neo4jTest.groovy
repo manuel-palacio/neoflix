@@ -1,20 +1,14 @@
 package net.palacesoft.movies;
 
 
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.neo4j.graphdb.Node;
-import org.neo4j.rest.graphdb.RestGraphDatabase;
-import org.neo4j.rest.graphdb.query.RestGremlinQueryEngine;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.neo4j.core.GraphDatabase;
-import org.springframework.data.neo4j.support.Neo4jTemplate;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-
-import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertThat
-import org.neo4j.rest.graphdb.entity.RestNode;
+import org.junit.Test
+import org.junit.runner.RunWith
+import org.neo4j.rest.graphdb.entity.RestNode
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.data.neo4j.core.GraphDatabase
+import org.springframework.data.neo4j.support.Neo4jTemplate
+import org.springframework.test.context.ContextConfiguration
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(locations = "classpath:applicationContext.xml")

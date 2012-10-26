@@ -2,17 +2,17 @@ package net.palacesoft.neo4j.movies
 
 import com.sun.jersey.core.spi.factory.ResponseBuilderImpl
 import com.sun.jersey.spi.resource.Singleton
-
-import javax.ws.rs.GET
-import javax.ws.rs.Path
-import javax.ws.rs.core.Response
-import javax.annotation.PostConstruct
+import org.neo4j.rest.graphdb.entity.RestNode
+import org.springframework.data.neo4j.core.GraphDatabase
 import org.springframework.data.neo4j.rest.SpringRestGraphDatabase
 import org.springframework.data.neo4j.support.Neo4jTemplate
-import org.springframework.data.neo4j.core.GraphDatabase
+
+import javax.annotation.PostConstruct
+import javax.ws.rs.GET
+import javax.ws.rs.Path
 import javax.ws.rs.QueryParam
-import org.neo4j.rest.graphdb.entity.RestNode
-import org.apache.commons.lang.StringEscapeUtils
+import javax.ws.rs.core.Response
+import groovy.json.JsonBuilder
 
 @Path("/show")
 @Singleton
@@ -22,13 +22,13 @@ class MovieResource {
 
     GraphDatabase graphDb = new SpringRestGraphDatabase(neoUrl != null ? neoUrl : "http://localhost:7474/db/data")
 
-    def neo4jTemplate = new Neo4jTemplate(graphDb)
-
-
     def localhost = "http://localhost:8080"
 
     @PostConstruct
     void createGraph() {
+
+        def neo4jTemplate = new Neo4jTemplate(graphDb)
+
 
         if (neo4jTemplate.execute("g.idx('vertices')[[type:'Movie']].count()", null).to(Integer.class).single() > 0) {
             return
@@ -80,6 +80,8 @@ class MovieResource {
     }
 
     private def getRecommendations(long id) {
+        def neo4jTemplate = new Neo4jTemplate(graphDb)
+
         def script = """
                 m = [:];
                 x = [] as Set;
@@ -105,20 +107,20 @@ class MovieResource {
 
         if (!result || result.empty) {
 
-            return "[{id: ${id},name: No Recommendations, values:[{id:${id}, name:No Recommendations}]}]"
+            return [id: id, name: "No Recommendations", values: [id: id, name: "No Recommendations"]]
         }
 
         def jsonResult = result.collect() {
-            """{"id":"${it.key.toString().split(":")[0]}","name":"${it.key.toString().split(":")[1]}"}"""
+            [id: it.key.toString().split(":")[0], "name": it.key.toString().split(":")[1]]
         }
 
-        return """[{"id":"${id}" ,"name":"Recommendations","values":[${jsonResult.join(",")}]}]"""
-
-
+        return ["id": id, "name": "Recommendations", "values": [jsonResult.join(",")]]
     }
 
     @GET
     public Response getMovie(@QueryParam("id") String id) {
+        def neo4jTemplate = new Neo4jTemplate(graphDb)
+
         RestNode node
         if (id.isNumber()) {
             node = neo4jTemplate.execute("g.v(${id});", null).to(RestNode.class).single()
@@ -127,17 +129,14 @@ class MovieResource {
 
         }
 
-
-        def json = "{}"
+        def json = [:]
         if (node) {
-            json = """{"details_html": "HTML",
-               "data": {"attributes": ${getRecommendations(node.getId())},
-                         "name": "${getName(node)}",
-                         "id": "${id}"}}"""
+            json = ["details_html": "HTML",
+                    "data": ["attributes": getRecommendations(node.getId()), "name": getName(node), "id": id]]
         }
 
 
-        new ResponseBuilderImpl().entity(json.toString()).status(200).build()
+        new ResponseBuilderImpl().entity(new JsonBuilder(json).toString()).status(200).build()
 
     }
 
@@ -150,7 +149,5 @@ class MovieResource {
             case "User": return """"{"${node.getProperty("userId")}"} "Gender": "${node.getProperty("gender")}" "Age": "${node.getProperty("age")}"}"""
             case "Genera": return node.getProperty("genera")
         }
-
-
     }
 }
