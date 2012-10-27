@@ -2,6 +2,7 @@ package net.palacesoft.neo4j.movies
 
 import com.sun.jersey.core.spi.factory.ResponseBuilderImpl
 import com.sun.jersey.spi.resource.Singleton
+import groovy.json.JsonSlurper
 import org.neo4j.rest.graphdb.entity.RestNode
 import org.springframework.data.neo4j.core.GraphDatabase
 import org.springframework.data.neo4j.rest.SpringRestGraphDatabase
@@ -13,7 +14,6 @@ import javax.ws.rs.Path
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.Response
 import groovy.json.JsonBuilder
-import groovy.json.JsonSlurper
 
 @Path("/show")
 @Singleton
@@ -23,15 +23,16 @@ class MovieResource {
 
     def movieKey = System.getProperty("TMDB_KEY")
 
+
     GraphDatabase graphDb = new SpringRestGraphDatabase(neoUrl != null ? neoUrl : "http://localhost:7474/db/data")
+
+    def neo4jTemplate = new Neo4jTemplate(graphDb)
+
 
     def localhost = "http://localhost:8080"
 
     @PostConstruct
     void createGraph() {
-
-        def neo4jTemplate = new Neo4jTemplate(graphDb)
-
 
         if (neo4jTemplate.execute("g.idx('vertices')[[type:'Movie']].count()", null).to(Integer.class).single() > 0) {
             return
@@ -83,8 +84,6 @@ class MovieResource {
     }
 
     private def getRecommendations(long id) {
-        def neo4jTemplate = new Neo4jTemplate(graphDb)
-
         def script = """
                 m = [:];
                 x = [] as Set;
@@ -110,20 +109,20 @@ class MovieResource {
 
         if (!result || result.empty) {
 
-            return [id: id, name: "No Recommendations", values: [id: id, name: "No Recommendations"]]
+            return [id: id, name: "No Recommendations", values: [[id: id, name: "No Recommendations"]]]
         }
 
-        def jsonResult = result.collect() {
-            [id: it.key.toString().split(":")[0], "name": it.key.toString().split(":")[1]]
+        def jsonResult = result.collect {
+            [id: it.key.toString().split(":")[0], name: it.key.toString().split(":")[1]]
         }
 
-        return ["id": id, "name": "Recommendations", "values": [jsonResult.join(",")]]
+        return [id: id, name: "Recommendations", values: jsonResult]
+
+
     }
 
     @GET
     public Response getMovie(@QueryParam("id") String id) {
-        def neo4jTemplate = new Neo4jTemplate(graphDb)
-
         RestNode node
         if (id.isNumber()) {
             node = neo4jTemplate.execute("g.v(${id});", null).to(RestNode.class).single()
@@ -132,34 +131,38 @@ class MovieResource {
 
         }
 
+
         def json = [:]
         if (node) {
-            json = ["details_html": "<h2>${getName(node)}</h2>${node.getProperty("type") == "Movie" ? getPoster(node) : ""}",
-                    "data": ["attributes": getRecommendations(node.getId()), "name": getName(node), "id": id]]
+            json = [details_html: "<h2>${getName(node)}</h2>${getPoster(node)}",
+                    data: [attributes: [getRecommendations(node.getId())], name: getName(node), id: id]]
         }
 
 
         new ResponseBuilderImpl().entity(new JsonBuilder(json).toString()).status(200).build()
 
+
     }
 
     private def getPoster(RestNode node) {
-        def movieResponse = new JsonSlurper()
+        if (node.getProperty("type") == "Movie") {
+            def movieResponse = new JsonSlurper()
 
-        def result = movieResponse.parseText(new URL("http://api.themoviedb.org/3/search/movie?api_key=${movieKey}&query=${URLEncoder.encode(node.getProperty("title").toString())}").text)
+            def result = movieResponse.parseText(new URL("http://api.themoviedb.org/3/search/movie?api_key=${movieKey}&query=${URLEncoder.encode(node.getProperty("title").toString())}").text)
 
-        def movieUrl = "http://www.themoviedb.org/movie/${result.results.id[0]}"
-        def poster = "http://cf2.imgobject.com/t/p/w185${result.results.poster_path[0]}"
-        def tagLine = ""
-        def rating = result.results.vote_average[0]
-        def certification = ""
-        def overview = ""
-
-
-
-        "<a href='${movieUrl}' target='_blank'><img src='${poster}'><h3>${tagLine}</h3><p>Rating: ${rating} <br/>Rated: ${certification}</p><p>${overview}</p>"
+            def movieUrl = "http://www.themoviedb.org/movie/${result.results.id[0]}"
+            def poster = "http://cf2.imgobject.com/t/p/w185${result.results.poster_path[0]}"
+            def tagLine = ""
+            def rating = result.results.vote_average[0]
+            def certification = ""
+            def overview = ""
 
 
+
+            return "<a href='${movieUrl}' target='_blank'><img src='${poster}'><h3>${tagLine}</h3><p>Rating: ${rating} <br/>Rated: ${certification}</p><p>${overview}</p>"
+        }
+
+        ""
     }
 
     private def getName(RestNode node) {
@@ -171,5 +174,7 @@ class MovieResource {
             case "User": return """"{"${node.getProperty("userId")}"} "Gender": "${node.getProperty("gender")}" "Age": "${node.getProperty("age")}"}"""
             case "Genera": return node.getProperty("genera")
         }
+
+
     }
 }

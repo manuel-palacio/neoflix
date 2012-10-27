@@ -16,10 +16,10 @@ class TmdbTest {
 
         def movieUrl = "http://www.themoviedb.org/movie/${result.results.id[0]}"
         def poster = "http://cf2.imgobject.com/t/p/w185${result.results.poster_path[0]}"
-        //  def tagLine = result.results.overview[0]
+        def tagLine = ""
         def rating = result.results.vote_average[0]
-        //   def certification = ""
-        //   def overview = ""
+        def certification = ""
+        def overview = ""
 
         assert result
 
