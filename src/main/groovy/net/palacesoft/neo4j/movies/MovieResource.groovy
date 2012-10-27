@@ -134,7 +134,7 @@ class MovieResource {
 
         def json = [:]
         if (node) {
-            json = ["details_html": "<h2>${getName(node)}</h2>${getPoster(node)}",
+            json = ["details_html": "<h2>${getName(node)}</h2>${node.getProperty("type") == "Movie" ? getPoster(node) : ""}",
                     "data": ["attributes": getRecommendations(node.getId()), "name": getName(node), "id": id]]
         }
 
@@ -143,17 +143,18 @@ class MovieResource {
 
     }
 
-    private def getPoster(RestNode node){
+    private def getPoster(RestNode node) {
         def movieResponse = new JsonSlurper()
 
         def result = movieResponse.parseText(new URL("http://api.themoviedb.org/3/search/movie?api_key=${movieKey}&query=${URLEncoder.encode(node.getProperty("title").toString())}").text)
 
-        def movieUrl = ""
-        def poster = ""
+        def movieUrl = "http://www.themoviedb.org/movie/${result.results.id[0]}"
+        def poster = "http://cf2.imgobject.com/t/p/w185${result.results.poster_path[0]}"
         def tagLine = ""
-        def rating = ""
+        def rating = result.results.vote_average[0]
         def certification = ""
         def overview = ""
+
 
 
         "<a href='${movieUrl}' target='_blank'><img src='${poster}'><h3>${tagLine}</h3><p>Rating: ${rating} <br/>Rated: ${certification}</p><p>${overview}</p>"
