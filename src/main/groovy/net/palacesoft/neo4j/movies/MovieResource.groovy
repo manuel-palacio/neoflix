@@ -13,12 +13,15 @@ import javax.ws.rs.Path
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.Response
 import groovy.json.JsonBuilder
+import groovy.json.JsonSlurper
 
 @Path("/show")
 @Singleton
 class MovieResource {
 
     def neoUrl = System.getProperty("NEO4J_URL")
+
+    def movieKey = System.getProperty("TMDB_KEY")
 
     GraphDatabase graphDb = new SpringRestGraphDatabase(neoUrl != null ? neoUrl : "http://localhost:7474/db/data")
 
@@ -131,12 +134,30 @@ class MovieResource {
 
         def json = [:]
         if (node) {
-            json = ["details_html": "HTML",
+            json = ["details_html": "<h2>${getName(node)}</h2>${getPoster(node)}",
                     "data": ["attributes": getRecommendations(node.getId()), "name": getName(node), "id": id]]
         }
 
 
         new ResponseBuilderImpl().entity(new JsonBuilder(json).toString()).status(200).build()
+
+    }
+
+    private def getPoster(RestNode node){
+        def movieResponse = new JsonSlurper()
+
+        def result = movieResponse.parseText(new URL("http://api.themoviedb.org/3/search/movie?api_key=${movieKey}&query=${URLEncoder.encode(node.getProperty("title").toString())}").text)
+
+        def movieUrl = ""
+        def poster = ""
+        def tagLine = ""
+        def rating = ""
+        def certification = ""
+        def overview = ""
+
+
+        "<a href='${movieUrl}' target='_blank'><img src='${poster}'><h3>${tagLine}</h3><p>Rating: ${rating} <br/>Rated: ${certification}</p><p>${overview}</p>"
+
 
     }
 
