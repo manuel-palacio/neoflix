@@ -134,8 +134,8 @@ class MovieResource {
 
         def json = [:]
         if (node) {
-            json = [details_html: "<h2>${getName(node)}</h2>${getPoster(node)}",
-                    data: [attributes: [getRecommendations(node.getId())], name: getName(node), id: id]]
+            json = [details_html: "<h2>${node.getProperty("title")}</h2>${getPoster(node)}",
+                    data: [attributes: [getRecommendations(node.getId())], name: node.getProperty("title"), id: id]]
         }
 
 
@@ -145,36 +145,22 @@ class MovieResource {
     }
 
     private def getPoster(RestNode node) {
-        if (node.getProperty("type") == "Movie") {
-            def movieResponse = new JsonSlurper()
+        def movieResponse = new JsonSlurper()
 
-            def result = movieResponse.parseText(new URL("http://api.themoviedb.org/3/search/movie?api_key=${movieKey}&query=${URLEncoder.encode(node.getProperty("title").toString())}").text)
+        def result = movieResponse.parseText(new URL("http://api.themoviedb.org/3/search/movie?api_key=${movieKey}&query=${URLEncoder.encode(node.getProperty("title").toString())}").text)
 
-            def movieUrl = "http://www.themoviedb.org/movie/${result.results.id[0]}"
-            def poster = "http://cf2.imgobject.com/t/p/w185${result.results.poster_path[0]}"
-            def tagLine = ""
-            def rating = result.results.vote_average[0]
-            def certification = ""
-            def overview = ""
+        def movieUrl = "http://www.themoviedb.org/movie/${result.results.id[0]}"
+        def poster = "http://cf2.imgobject.com/t/p/w185${result.results.poster_path[0]}"
+        def rating = result.results.vote_average[0]
+
+        def details = movieResponse.parseText(new URL("http://api.themoviedb.org/3/movie/${result.results.id[0]}?api_key=${movieKey}").text)
+        def tagLine = details.tagline
+        def certification = ""
+        def overview = details.overview
 
 
 
-            return "<a href='${movieUrl}' target='_blank'><img src='${poster}'><h3>${tagLine}</h3><p>Rating: ${rating} <br/>Rated: ${certification}</p><p>${overview}</p>"
-        }
-
-        ""
-    }
-
-    private def getName(RestNode node) {
-        def type = node.getProperty("type")
-
-        switch (type) {
-            case "Movie": return node.getProperty("title")
-            case "Occupation": return node.getProperty("occupation")
-            case "User": return """"{"${node.getProperty("userId")}"} "Gender": "${node.getProperty("gender")}" "Age": "${node.getProperty("age")}"}"""
-            case "Genera": return node.getProperty("genera")
-        }
-
+        "<a href='${movieUrl}' target='_blank'><img src='${poster}'><h3>${tagLine}</h3><p>Rating: ${rating} <br/>Rated: ${certification}</p><p>${overview}</p>"
 
     }
 }
