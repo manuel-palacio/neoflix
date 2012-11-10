@@ -16,7 +16,6 @@ import javax.ws.rs.core.Response
 import groovy.json.JsonBuilder
 
 @Path("/show")
-@Singleton
 class MovieResource {
 
     def neoUrl = System.getProperty("NEO4J_URL")
