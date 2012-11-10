@@ -26,7 +26,7 @@ class MovieResource {
 
     GraphDatabase graphDb = new SpringRestGraphDatabase(neoUrl != null ? neoUrl : "http://localhost:7474/db/data")
 
-    def host = "http://host:8080"
+    def host = "http://neoflix-groovy.heroku.com"
 
     @PostConstruct
     void createGraphIfNeeded() {
