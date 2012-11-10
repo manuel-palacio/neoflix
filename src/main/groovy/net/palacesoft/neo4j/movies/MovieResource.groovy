@@ -19,9 +19,9 @@ import groovy.json.JsonBuilder
 @Singleton
 class MovieResource {
 
-    def neoUrl = System.getProperty("NEO4J_URL")
+    def neoUrl = System.getenv("NEO4J_URL")
 
-    def movieKey = System.getProperty("TMDB_KEY")
+    def movieKey = System.getenv("TMDB_KEY")
 
 
     GraphDatabase graphDb = new SpringRestGraphDatabase(neoUrl != null ? neoUrl : "http://localhost:7474/db/data")
