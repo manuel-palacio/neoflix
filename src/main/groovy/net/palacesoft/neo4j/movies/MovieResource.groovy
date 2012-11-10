@@ -64,6 +64,9 @@ class MovieResource {
 
     @GET
     public Response getMovie(@QueryParam("id") String id) {
+
+        println neoUrl
+
         def neo4jTemplate = new Neo4jTemplate(graphDb)
 
         RestNode node
