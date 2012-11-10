@@ -11,6 +11,15 @@
         </init-param>
         <load-on-startup>1</load-on-startup>
     </servlet>
+    <servlet>
+        <servlet-name>GraphCreator</servlet-name>
+        <servlet-class>net.palacesoft.neo4j.movies.GraphCreator</servlet-class>
+    </servlet>
+
+    <servlet-mapping>
+        <servlet-name>GraphCreator</servlet-name>
+        <url-pattern>/createGraph/*</url-pattern>
+    </servlet-mapping>
     <servlet-mapping>
         <servlet-name>Jersey REST Service</servlet-name>
         <url-pattern>/resources/*</url-pattern>
