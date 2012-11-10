@@ -8,14 +8,13 @@ import org.springframework.data.neo4j.rest.SpringRestGraphDatabase
 
 class GraphCreator extends HttpServlet {
 
-    def neoUrl = System.getProperty("NEO4J_URL") + "/db/data/"
-
-    def host = "http://neoflix-groovy.herokuapp.com"
-
-
-
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) {
+
+        String host = "http://neoflix-groovy.herokuapp.com"
+
+
+        String neoUrl = """${System.getProperty("NEO4J_URL")}/db/data/"""
 
         Neo4jTemplate neo4jTemplate = new Neo4jTemplate(new SpringRestGraphDatabase(neoUrl))
 
