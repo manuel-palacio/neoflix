@@ -14,7 +14,7 @@ class GraphCreator extends HttpServlet {
         String host = "http://neoflix-groovy.herokuapp.com"
 
 
-        String neoUrl = "http://8ebbd36fa:c2571ce69@b4f822dd9.hosted.neo4j.org:7071/db/data/"
+        String neoUrl = "http://b4f822dd9.hosted.neo4j.org:7071/db/data/"
 
         Neo4jTemplate neo4jTemplate = new Neo4jTemplate(new SpringRestGraphDatabase(neoUrl))
 
