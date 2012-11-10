@@ -8,7 +8,7 @@ import org.springframework.data.neo4j.rest.SpringRestGraphDatabase
 
 class GraphCreator extends HttpServlet {
 
-    def neoUrl = System.getProperty("NEO4J_URL")
+    def neoUrl = System.getProperty("NEO4J_URL") + "/db/data"
 
     def host = "http://neoflix-groovy.herokuapp.com"
 
