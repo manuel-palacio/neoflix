@@ -12,20 +12,45 @@ import javax.ws.rs.GET
 import javax.ws.rs.Path
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.Response
+import javax.annotation.PostConstruct
 
 @Path("/show")
 class MovieResource {
 
-    def neoUrl = """${System.getProperty("NEO4J_URL")}/db/data/"""
+    def movieKey
 
-    def movieKey = System.getProperty("TMDB_KEY")
+    def neo4jTemplate
 
 
-    GraphDatabase graphDb = new SpringRestGraphDatabase(neoUrl)
+    @PostConstruct
+    void init() {
+        def neoUrl = System.getenv("NEO4J_URL");
+        if (neoUrl == null) {
+            neoUrl = System.getProperty("NEO4J_URL");
+        }
+
+        neoUrl = neoUrl + "/db/data"
+
+
+        movieKey = System.getenv("TMDB_KEY");
+        // If env var not set, try reading from Java "system properties"
+        if (movieKey == null) {
+            movieKey = System.getProperty("TMDB_KEY");
+        }
+
+
+        println neoUrl
+        println movieKey
+
+
+        GraphDatabase graphDb = new SpringRestGraphDatabase(neoUrl)
+
+        neo4jTemplate = new Neo4jTemplate(graphDb)
+
+    }
 
 
     private def getRecommendations(long id) {
-        def neo4jTemplate = new Neo4jTemplate(graphDb)
 
         def script = """
                 m = [:];
@@ -64,10 +89,6 @@ class MovieResource {
 
     @GET
     public Response getMovie(@QueryParam("id") String id) {
-
-        println neoUrl
-
-        def neo4jTemplate = new Neo4jTemplate(graphDb)
 
         RestNode node
         if (id.isNumber()) {
