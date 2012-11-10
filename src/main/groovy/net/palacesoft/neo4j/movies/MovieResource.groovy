@@ -26,13 +26,13 @@ class MovieResource {
 
     GraphDatabase graphDb = new SpringRestGraphDatabase(neoUrl != null ? neoUrl : "http://localhost:7474/db/data")
 
-    def neo4jTemplate = new Neo4jTemplate(graphDb)
-
-
-    def localhost = "http://localhost:8080"
+    def host = "http://host:8080"
 
     @PostConstruct
-    void createGraph() {
+    void createGraphIfNeeded() {
+
+        def neo4jTemplate = new Neo4jTemplate(graphDb)
+
 
         if (neo4jTemplate.execute("g.idx('vertices')[[type:'Movie']].count()", null).to(Integer.class).single() > 0) {
             return
@@ -47,7 +47,7 @@ class MovieResource {
         }
 
         def script = """g.setMaxBufferSize(1000);
-                        '${localhost}/movies.dat'.toURL().eachLine { def line ->
+                        '${host}/movies.dat'.toURL().eachLine { def line ->
                              def components = line.split('::');
                              def movieVertex = g.addVertex(['type':'Movie', 'movieId':components[0].toInteger(), 'title':components[1]]);
                              components[2].split('|').each { def genera ->
@@ -62,7 +62,7 @@ class MovieResource {
                                        13:'retired', 14:'sales/marketing', 15:'scientist', 16:'self-employed',
                                        17:'technician/engineer', 18:'tradesman/craftsman', 19:'unemployed', 20:'writer'];
 
-                                     '${localhost}/users.dat'.toURL().eachLine { def line ->
+                                     '${host}/users.dat'.toURL().eachLine { def line ->
                                        def components = line.split('::');
                                        def userVertex = g.addVertex(['type':'User', 'userId':components[0].toInteger(), 'gender':components[1], 'age':components[2].toInteger()]);
                                        def occupation = occupations[components[3].toInteger()];
@@ -71,7 +71,7 @@ class MovieResource {
                                        g.addEdge(userVertex, occupationVertex, 'hasOccupation');
                                      }
 
-                                     '${localhost}/ratings.dat'.toURL().eachLine {def line ->
+                                     '${host}/ratings.dat'.toURL().eachLine {def line ->
                                        def components = line.split('::');
                                        def ratedEdge = g.addEdge(g.idx(Tokens.T.v)[[userId:components[0].toInteger()]].next(), g.idx(T.v)[[movieId:components[1].toInteger()]].next(), 'rated');
                                        ratedEdge.setProperty('stars', components[2].toInteger());
@@ -84,6 +84,8 @@ class MovieResource {
     }
 
     private def getRecommendations(long id) {
+        def neo4jTemplate = new Neo4jTemplate(graphDb)
+
         def script = """
                 m = [:];
                 x = [] as Set;
@@ -123,17 +125,18 @@ class MovieResource {
 
     @GET
     public Response getMovie(@QueryParam("id") String id) {
+        def neo4jTemplate = new Neo4jTemplate(graphDb)
+
         RestNode node
         if (id.isNumber()) {
             node = neo4jTemplate.execute("g.v(${id});", null).to(RestNode.class).single()
         } else {
             node = neo4jTemplate.execute("g.idx(Tokens.T.v)[[title:'${URLDecoder.decode(id)}']].next();", null).to(RestNode.class).single()
-
         }
 
 
         def json = [:]
-        if (node) {
+        if (node && node.hasProperty("title")) {
             json = [details_html: "<h2>${node.getProperty("title")}</h2>${getPoster(node)}",
                     data: [attributes: [getRecommendations(node.getId())], name: node.getProperty("title"), id: id]]
         }

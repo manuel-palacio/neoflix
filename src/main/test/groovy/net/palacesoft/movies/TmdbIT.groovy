@@ -3,7 +3,7 @@ package net.palacesoft.movies
 import org.junit.Test
 import groovy.json.JsonSlurper
 
-class TmdbTest {
+class TmdbIT {
 
     def movieKey = System.getProperty("TMDB_KEY")
 
