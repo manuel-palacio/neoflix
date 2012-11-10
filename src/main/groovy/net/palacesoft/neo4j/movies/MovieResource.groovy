@@ -16,9 +16,9 @@ import javax.ws.rs.core.Response
 @Path("/show")
 class MovieResource {
 
-    String neoUrl = "http://b4f822dd9.hosted.neo4j.org:7071/db/data/"
+    def neoUrl = """${System.getProperty("NEO4J_URL")}/db/data/"""
 
-    String movieKey = System.getProperty("TMDB_KEY")
+    def movieKey = System.getProperty("TMDB_KEY")
 
 
     GraphDatabase graphDb = new SpringRestGraphDatabase(neoUrl)

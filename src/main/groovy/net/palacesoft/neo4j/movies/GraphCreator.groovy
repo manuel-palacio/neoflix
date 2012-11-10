@@ -5,6 +5,7 @@ import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 import org.springframework.data.neo4j.support.Neo4jTemplate
 import org.springframework.data.neo4j.rest.SpringRestGraphDatabase
+import org.springframework.data.neo4j.core.GraphDatabase
 
 class GraphCreator extends HttpServlet {
 
@@ -14,9 +15,13 @@ class GraphCreator extends HttpServlet {
         String host = "http://neoflix-groovy.herokuapp.com"
 
 
-        String neoUrl = "http://b4f822dd9.hosted.neo4j.org:7071/db/data/"
+        String neoUrl = """${System.getProperty("NEO4J_URL")}/db/data/"""
 
-        Neo4jTemplate neo4jTemplate = new Neo4jTemplate(new SpringRestGraphDatabase(neoUrl))
+        GraphDatabase graphDb = new SpringRestGraphDatabase(neoUrl)
+
+
+        def neo4jTemplate = new Neo4jTemplate(graphDb)
+
 
 
         if (neo4jTemplate.execute("g.idx('vertices')[[type:'Movie']].count()", null).to(Integer.class).single() > 0) {
