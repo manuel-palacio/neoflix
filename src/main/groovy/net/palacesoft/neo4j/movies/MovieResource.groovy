@@ -16,7 +16,7 @@ import javax.ws.rs.core.Response
 @Path("/show")
 class MovieResource {
 
-    def neoUrl = System.getProperty("NEO4J_URL") + "/db/data"
+    def neoUrl = System.getProperty("NEO4J_URL") + "/db/data/"
 
     def movieKey = System.getProperty("TMDB_KEY")
 
