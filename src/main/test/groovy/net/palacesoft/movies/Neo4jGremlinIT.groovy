@@ -9,18 +9,16 @@ import org.springframework.data.neo4j.core.GraphDatabase
 import org.springframework.data.neo4j.support.Neo4jTemplate
 import org.springframework.test.context.ContextConfiguration
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner
+import org.springframework.data.neo4j.rest.SpringRestGraphDatabase
 
-@RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(locations = "classpath:applicationContext.xml")
-public class Neo4jIT {
+public class Neo4jGremlinIT {
 
-    @Autowired
-    GraphDatabase graphDatabase
+    GraphDatabase graphDb = new SpringRestGraphDatabase(System.getProperty("NEO4J_URL") + "/db/data")
 
     @Test
     public void checkDB() {
 
-        Neo4jTemplate neo = new Neo4jTemplate(graphDatabase)
+        Neo4jTemplate neo = new Neo4jTemplate(graphDb)
 
         def result = neo.execute("g.idx('vertices')[[type:'Movie']].count()", null).to(Integer.class).single()
 
@@ -32,7 +30,7 @@ public class Neo4jIT {
 
     @Test
     public void getRecommendations() {
-        Neo4jTemplate neo = new Neo4jTemplate(graphDatabase)
+        Neo4jTemplate neo = new Neo4jTemplate(graphDb)
         def script = """
                     m = [:];
                     x = [] as Set;

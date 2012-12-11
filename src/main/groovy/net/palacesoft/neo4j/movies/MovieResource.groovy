@@ -13,6 +13,7 @@ import javax.ws.rs.Path
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.Response
 import javax.annotation.PostConstruct
+import javax.ws.rs.Produces
 
 @Path("/show")
 class MovieResource {
@@ -26,7 +27,7 @@ class MovieResource {
     void init() {
         def neoUrl = System.getenv("NEO4J_URL");
         if (neoUrl == null) {
-            neoUrl = System.getProperty("NEO4J_URL");
+            neoUrl = System.getProperty("NEO4J_URL")
         }
 
         neoUrl = neoUrl + "/db/data"
@@ -38,11 +39,6 @@ class MovieResource {
             movieKey = System.getProperty("TMDB_KEY");
         }
 
-
-        println neoUrl
-        println movieKey
-
-
         GraphDatabase graphDb = new SpringRestGraphDatabase(neoUrl)
 
         neo4jTemplate = new Neo4jTemplate(graphDb)
@@ -52,56 +48,45 @@ class MovieResource {
 
     private def getRecommendations(long id) {
 
-        def script = """
-                m = [:];
-                x = [] as Set;
-                v = g.v(node_id);
-                v.
-                out('hasGenera').
-                aggregate(x).
-                back(2).
-                inE('rated').
-                filter{it.getProperty('stars') > 3}.
-                outV.
-                outE('rated').
-                filter{it.getProperty('stars') > 3}.
-                inV.
-                filter{it != v}.
-                filter{it.out('hasGenera').toSet().equals(x)}.
-                groupCount(m){"\${it.id}:\${it.title.replaceAll(',',' ')}\"}.iterate();
-
-                m.sort{a,b -> b.value <=> a.value}[0..24];"""
+        def cypherScript = """
+                  START movie=node({node_id}) MATCH movie-[:hasGenera]-genera1, movie<--()-[ratedRel:rated]->anotherMovie-[:hasGenera]-genera2 WHERE ratedRel.stars > 3
+                  AND genera1.genera = genera2.genera
+                  RETURN DISTINCT anotherMovie.title as title, anotherMovie.movieId as movieId,COUNT(anotherMovie) as count
+                  ORDER BY count(anotherMovie)
+                  DESC LIMIT 25;
+                """
 
 
-        Map result = neo4jTemplate.execute(script, ["node_id": id]).to(Map.class).single()
+        def result = neo4jTemplate.query(cypherScript, ["node_id": id])
 
-        if (!result || result.empty) {
+        if (!result) {
 
             return [id: id, name: "No Recommendations", values: [[id: id, name: "No Recommendations"]]]
         }
 
         def jsonResult = result.collect {
-            [id: it.key.toString().split(":")[0], name: it.key.toString().split(":")[1]]
+            [id: it.movieId, name: it.title]
         }
 
         return [id: id, name: "Recommendations", values: jsonResult]
     }
 
     @GET
+    @Produces("application/json")
     public Response getMovie(@QueryParam("id") String id) {
 
         RestNode node
         if (id.isNumber()) {
-            node = neo4jTemplate.execute("g.v(${id});", null).to(RestNode.class).single()
+            node = neo4jTemplate.query("START movie=node(${id}) RETURN movie;", null).to(RestNode.class).single()
         } else {
-            node = neo4jTemplate.execute("g.idx(Tokens.T.v)[[title:'${URLDecoder.decode(id)}']].next();", null).to(RestNode.class).single()
+            node = neo4jTemplate.query("START n=node:vertices(title='${URLDecoder.decode(id)}') RETURN n;", null).to(RestNode.class).single()
         }
 
 
         def json = [:]
         if (node && node.hasProperty("title")) {
             json = [details_html: "<h2>${node.getProperty("title")}</h2>${getPoster(node)}",
-                    data: [attributes: [getRecommendations(node.getId())], name: node.getProperty("title"), id: id]]
+                    data: [attributes: [getRecommendations(Long.parseLong(node.getProperty("movieId").toString()))], name: node.getProperty("title"), id: id]]
         }
 
 
