@@ -2,18 +2,12 @@ package net.palacesoft.movies;
 
 
 import org.junit.Test
-import org.junit.runner.RunWith
+import org.neo4j.helpers.collection.MapUtil
 import org.neo4j.rest.graphdb.entity.RestNode
 import org.springframework.data.neo4j.core.GraphDatabase
 import org.springframework.data.neo4j.rest.SpringRestGraphDatabase
 import org.springframework.data.neo4j.support.Neo4jTemplate
-import org.springframework.test.context.ContextConfiguration
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner
 import org.springframework.data.neo4j.template.Neo4jOperations
-import org.neo4j.rest.graphdb.util.QueryResult
-import org.springframework.data.neo4j.rest.SpringRestResult
-import org.springframework.data.neo4j.conversion.Result
-import org.neo4j.helpers.collection.MapUtil
 
 public class Neo4jCypherIT {
 
@@ -38,19 +32,19 @@ public class Neo4jCypherIT {
 
 
         def cypherScript = """
-          START movie=node({node_id}) MATCH movie-[:hasGenera]-genera1, movie<--()-[ratedRel:rated]->anotherMovie-[:hasGenera]-genera2 WHERE ratedRel.stars > 3
-          AND genera1.genera = genera2.genera
-          RETURN DISTINCT anotherMovie.title as title, anotherMovie.movieId as movieId,COUNT(anotherMovie) as count
-          ORDER BY count(anotherMovie)
-          DESC LIMIT 25;
+          START movie=node:vertices(movieId={movieId})
+          MATCH movie-->genera<--anotherMovie<-[ratedRel:rated]-person
+          WHERE ratedRel.stars > 3
+          RETURN DISTINCT anotherMovie.title as title, anotherMovie.movieId as id,
+          COUNT(anotherMovie) as count ORDER BY count(anotherMovie) DESC LIMIT 20;
         """
 
 
-        RestNode node = neo.query("START n=node:vertices(title='Matrix, The (1999)') RETURN n;", null).to(RestNode.class).single()
+        RestNode node = neo.query("START n=node:vertices(title='Toy Story (1995)') RETURN n;", null).to(RestNode.class).single()
 
         int movieId =  node.getProperty("movieId") as Integer;
 
-        def result = neo.query(cypherScript, MapUtil.map("node_id", movieId))
+        def result = neo.query(cypherScript, MapUtil.map("movieId", movieId))
 
 
         if (!result){

@@ -49,12 +49,12 @@ class MovieResource {
     private def getRecommendations(long movieId) {
 
         def cypherScript = """
-                  START movie=node:vertices(movieId={movieId}) MATCH movie-[:hasGenera]-genera1, movie<--()-[ratedRel:rated]->anotherMovie-[:hasGenera]-genera2 WHERE ratedRel.stars > 3
-                  AND genera1.genera = genera2.genera
-                  RETURN DISTINCT anotherMovie.title as title, anotherMovie.movieId as movieId,COUNT(anotherMovie) as count
-                  ORDER BY count(anotherMovie)
-                  DESC LIMIT 25;
-                """
+                 START movie=node:vertices(movieId={movieId})
+                 MATCH movie-->genera<--anotherMovie<-[ratedRel:rated]-person
+                 WHERE ratedRel.stars > 3
+                 RETURN DISTINCT anotherMovie.title as title, anotherMovie.movieId as id,
+                 COUNT(anotherMovie) as count ORDER BY count(anotherMovie) DESC LIMIT 15;
+                 """
 
 
         def result = neo4jTemplate.query(cypherScript, ["movieId": movieId])
@@ -65,7 +65,7 @@ class MovieResource {
         }
 
         def jsonResult = result.collect {
-            [id: it.movieId, name: it.title]
+            [id: it.id, name: it.title]
         }
 
         return [id: movieId, name: "Recommendations", values: jsonResult]
