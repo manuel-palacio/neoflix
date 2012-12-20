@@ -52,7 +52,7 @@ class MovieResource {
                  START movie=node:vertices(movieId={movieId})
                  MATCH movie-->genera<--anotherMovie<-[ratedRel:rated]-person
                  WHERE ratedRel.stars > 3
-                 RETURN DISTINCT anotherMovie.title as title, anotherMovie.movieId as id,
+                 RETURN anotherMovie.title as title, anotherMovie.movieId as id,
                  COUNT(anotherMovie) as count ORDER BY count(anotherMovie) DESC LIMIT 15;
                  """
 
@@ -104,13 +104,17 @@ class MovieResource {
         def poster = "http://cf2.imgobject.com/t/p/w185${result.results.poster_path[0]}"
         def rating = result.results.vote_average[0]
 
-        def details = movieResponse.parseText(new URL("http://api.themoviedb.org/3/movie/${result.results.id[0]}?api_key=${movieKey}").text)
-        def tagLine = details.tagline
-        def certification = ""
-        def overview = details.overview
+        try {
+            def details = movieResponse.parseText(new URL("http://api.themoviedb.org/3/movie/${result.results.id[0]}?api_key=${movieKey}").text)
+            def tagLine = details.tagline
+            def certification = ""
+            def overview = details.overview
+            return "<a href='${movieUrl}' target='_blank'><img src='${poster}'><h3>${tagLine}</h3><p>Rating: ${rating} <br/>Rated: ${certification}</p><p>${overview}</p>"
+        } catch (e) {
+            //ignore
+        }
 
+        return ""
 
-
-        "<a href='${movieUrl}' target='_blank'><img src='${poster}'><h3>${tagLine}</h3><p>Rating: ${rating} <br/>Rated: ${certification}</p><p>${overview}</p>"
     }
 }

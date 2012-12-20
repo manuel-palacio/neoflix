@@ -35,7 +35,7 @@ public class Neo4jCypherIT {
           START movie=node:vertices(movieId={movieId})
           MATCH movie-->genera<--anotherMovie<-[ratedRel:rated]-person
           WHERE ratedRel.stars > 3
-          RETURN DISTINCT anotherMovie.title as title, anotherMovie.movieId as id,
+          RETURN anotherMovie.title as title, anotherMovie.movieId as id,
           COUNT(anotherMovie) as count ORDER BY count(anotherMovie) DESC LIMIT 20;
         """
 
