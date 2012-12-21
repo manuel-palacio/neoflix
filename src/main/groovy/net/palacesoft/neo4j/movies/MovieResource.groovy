@@ -99,11 +99,10 @@ class MovieResource {
     private def getPoster(RestNode node) {
         try {
             TmdbMovie tmdbMovie = new TmdbMovie(movieKey)
-            int movieId = tmdbMovie.search(node.getProperty("title").toString(), 1)[0].id
+            Movie movie = tmdbMovie.search(node.getProperty("title").toString(), 1)[0]
 
-            def movieUrl = "http://www.themoviedb.org/movie/${movieId}"
-            def poster = tmdbMovie.getPosterUrlForSize(movieId, "w185")
-            Movie movie = tmdbMovie.getMovie(movieId) //TODO should not need this
+            def movieUrl = "http://www.themoviedb.org/movie/${movie.id}"
+            def poster = tmdbMovie.getPosterUrlForSize(movie.id, "w185")
             def rating = movie.vote_average
             def tagLine = movie.tagline
             def overview = movie.overview
