@@ -79,7 +79,7 @@ class MovieResource {
         if (id.isNumber()) {
             node = neo4jTemplate.query("START movie=node(${id}) RETURN movie;", null).to(RestNode.class).single()
         } else {
-            node = neo4jTemplate.query("START n=node:vertices(title='${URLDecoder.decode(id)}') RETURN n;", null).to(RestNode.class).single()
+            node = neo4jTemplate.query("START n=node:vertices(title='${URLDecoder.decode(id, "utf-8")}') RETURN n;", null).to(RestNode.class).single()
         }
 
 
