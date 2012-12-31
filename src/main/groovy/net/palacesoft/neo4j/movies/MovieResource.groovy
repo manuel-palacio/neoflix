@@ -30,7 +30,7 @@ class MovieResource {
             neoUrl = System.getProperty("NEO4J_URL")
         }
 
-        neoUrl = neoUrl + "/db/data"
+        neoUrl = neoUrl + "/db/data/cypher"
 
 
         movieKey = System.getenv("TMDB_KEY");
