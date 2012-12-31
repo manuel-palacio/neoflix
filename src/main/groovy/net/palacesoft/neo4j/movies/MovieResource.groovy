@@ -39,6 +39,8 @@ class MovieResource {
             movieKey = System.getProperty("TMDB_KEY");
         }
 
+        println "#About to initialize using " + neoUrl
+
         GraphDatabase graphDb = new SpringRestGraphDatabase(neoUrl)
 
         neo4jTemplate = new Neo4jTemplate(graphDb)
