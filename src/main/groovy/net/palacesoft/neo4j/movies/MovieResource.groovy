@@ -12,10 +12,12 @@ import javax.ws.rs.GET
 import javax.ws.rs.Path
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.Response
+import com.sun.jersey.spi.resource.Singleton
 import javax.annotation.PostConstruct
 import javax.ws.rs.Produces
 
 @Path("/show")
+@Singleton
 class MovieResource {
 
     def movieKey
@@ -25,23 +27,18 @@ class MovieResource {
 
     @PostConstruct
     void init() {
-        def neoUrl = System.getenv("NEO4J_URL");
-        if (neoUrl == null) {
-            neoUrl = System.getProperty("NEO4J_URL")
-        }
+        def neoUrl = System.getenv("NEO4J_URL") == null ? System.getProperty("NEO4J_URL") : ""
+        neoUrl += "/db/data"
 
-        neoUrl = neoUrl + "/db/data/cypher"
+        def neoUsername = System.getenv("NEO4J_USERNAME") == null ? System.getProperty("NEO4J_USERNAME") : ""
 
+        def neoPwd = System.getenv("NEO4J_PASSWORD") == null ? System.getProperty("NEO4J_PASSWORD") : ""
 
-        movieKey = System.getenv("TMDB_KEY");
-        // If env var not set, try reading from Java "system properties"
-        if (movieKey == null) {
-            movieKey = System.getProperty("TMDB_KEY");
-        }
+        movieKey = System.getenv("TMDB_KEY") == null ? System.getProperty("TMDB_KEY") : ""
 
         println "#About to initialize using " + neoUrl
 
-        GraphDatabase graphDb = new SpringRestGraphDatabase(neoUrl)
+        GraphDatabase graphDb = new SpringRestGraphDatabase(neoUrl, neoUsername, neoPwd)
 
         neo4jTemplate = new Neo4jTemplate(graphDb)
 
