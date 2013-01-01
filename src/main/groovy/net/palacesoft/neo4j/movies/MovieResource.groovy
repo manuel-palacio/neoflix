@@ -45,7 +45,11 @@ class MovieResource {
             neoUrl = System.getProperty("NEO4J_PASSWORD")
         }
 
-        movieKey = System.getenv("TMDB_KEY") ? System.getProperty("TMDB_KEY") : ""
+        movieKey = System.getenv("TMDB_KEY")
+
+        if (!movieKey) {
+            neoUrl = System.getProperty("TMDB_KEY")
+        }
 
         println "#About to initialize using " + neoUrl
 
