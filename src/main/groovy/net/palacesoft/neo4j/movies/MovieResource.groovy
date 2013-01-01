@@ -27,12 +27,23 @@ class MovieResource {
 
     @PostConstruct
     void init() {
-        def neoUrl = !System.getenv("NEO4J_URL") ? System.getProperty("NEO4J_URL") : ""
-        neoUrl = neoUrl +  "/db/data"
+        def neoUrl = System.getenv("NEO4J_URL")
+        if (!neoUrl) {
+            neoUrl = System.getProperty("NEO4J_URL")
+        }
+        neoUrl = neoUrl + "/db/data"
 
-        def neoUsername = !System.getenv("NEO4J_USERNAME") ? System.getProperty("NEO4J_USERNAME") : ""
+        def neoUsername = System.getenv("NEO4J_USERNAME")
 
-        def neoPwd = !System.getenv("NEO4J_PASSWORD") ? System.getProperty("NEO4J_PASSWORD") : ""
+        if (!neoUsername) {
+            neoUrl = System.getProperty("NEO4J_USERNAME")
+        }
+
+        def neoPwd = System.getenv("NEO4J_PASSWORD")
+
+        if (!neoPwd) {
+            neoUrl = System.getProperty("NEO4J_PASSWORD")
+        }
 
         movieKey = System.getenv("TMDB_KEY") ? System.getProperty("TMDB_KEY") : ""
 
