@@ -26,6 +26,15 @@
             <name>NEO4J</name>
             <url>http://m2.neo4j.org/content/repositories/releases</url>
         </repository>
+        <repository>
+            <id>sonatype</id>
+            <snapshots>
+                <enabled>true</enabled>
+
+            </snapshots>
+            <name>sonatype</name>
+            <url>https://oss.sonatype.org/content/groups/staging</url>
+        </repository>
     </repositories>
 
     <dependencies>
@@ -38,10 +47,10 @@
         </dependency>
 
         <dependency>
-                    <groupId>com.sun.jersey</groupId>
-                    <artifactId>jersey-bundle</artifactId>
-                    <version>1.16</version>
-                </dependency>
+            <groupId>com.sun.jersey</groupId>
+            <artifactId>jersey-bundle</artifactId>
+            <version>1.16</version>
+        </dependency>
 
         <dependency>
             <groupId>com.sun.jersey</groupId>
@@ -56,12 +65,11 @@
         </dependency>
 
 
-
         <dependency>
-             <groupId>com.github.manuel-palacio</groupId>
-             <artifactId>tmdb-api</artifactId>
-             <version>0.2</version>
-         </dependency>
+            <groupId>com.github.manuel-palacio</groupId>
+            <artifactId>tmdb-api</artifactId>
+            <version>0.2-SNAPSHOT</version>
+        </dependency>
 
         <dependency>
             <groupId>org.codehaus.groovy</groupId>
