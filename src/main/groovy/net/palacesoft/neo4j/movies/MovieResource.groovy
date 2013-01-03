@@ -2,7 +2,8 @@ package net.palacesoft.neo4j.movies
 
 import com.sun.jersey.core.spi.factory.ResponseBuilderImpl
 import groovy.json.JsonBuilder
-import groovy.json.JsonSlurper
+import net.palacesoft.tmdb.TmdbMovie
+import net.palacesoft.tmdb.model.Movie
 import org.neo4j.rest.graphdb.entity.RestNode
 import org.springframework.data.neo4j.core.GraphDatabase
 import org.springframework.data.neo4j.rest.SpringRestGraphDatabase
@@ -36,19 +37,19 @@ class MovieResource {
         def neoUsername = System.getenv("NEO4J_USERNAME")
 
         if (!neoUsername) {
-            neoUrl = System.getProperty("NEO4J_USERNAME")
+            neoUsername = System.getProperty("NEO4J_USERNAME")
         }
 
         def neoPwd = System.getenv("NEO4J_PASSWORD")
 
         if (!neoPwd) {
-            neoUrl = System.getProperty("NEO4J_PASSWORD")
+            neoPwd = System.getProperty("NEO4J_PASSWORD")
         }
 
         movieKey = System.getenv("TMDB_KEY")
 
         if (!movieKey) {
-            neoUrl = System.getProperty("TMDB_KEY")
+            movieKey = System.getProperty("TMDB_KEY")
         }
 
         println "#About to initialize using " + neoUrl
@@ -110,25 +111,21 @@ class MovieResource {
     }
 
     private def getPoster(RestNode node) {
-        def movieResponse = new JsonSlurper()
-
-        def result = movieResponse.parseText(new URL("http://api.themoviedb.org/3/search/movie?api_key=${movieKey}&query=${URLEncoder.encode(node.getProperty("title").toString())}").text)
-
-        def movieUrl = "http://www.themoviedb.org/movie/${result.results.id[0]}"
-        def poster = "http://cf2.imgobject.com/t/p/w185${result.results.poster_path[0]}"
-        def rating = result.results.vote_average[0]
-
         try {
-            def details = movieResponse.parseText(new URL("http://api.themoviedb.org/3/movie/${result.results.id[0]}?api_key=${movieKey}").text)
-            def tagLine = details.tagline
-            def certification = ""
-            def overview = details.overview
+            TmdbMovie tmdbMovie = new TmdbMovie(movieKey)
+            Movie movie = tmdbMovie.search(node.getProperty("title").toString(), 1)[0]
+
+            def movieUrl = "http://www.themoviedb.org/movie/${movie.id}"
+            def poster = tmdbMovie.getPosterUrlForSize(movie.id, "w185")
+            def rating = movie.vote_average
+            def tagLine = movie.tagline
+            def overview = movie.overview
+            def certification = movie.status
+
             return "<a href='${movieUrl}' target='_blank'><img src='${poster}'><h3>${tagLine}</h3><p>Rating: ${rating} <br/>Rated: ${certification}</p><p>${overview}</p>"
         } catch (e) {
             //ignore
         }
-
-        return ""
 
     }
 }

@@ -57,11 +57,11 @@
 
 
 
-        <!-- <dependency>
-             <groupId>net.palacesoft.tmdb</groupId>
-             <artifactId>groovy-tmdb</artifactId>
-             <version>0.1</version>
-         </dependency>-->
+        <dependency>
+             <groupId>com.github.manuel-palacio</groupId>
+             <artifactId>tmdb-api</artifactId>
+             <version>0.2</version>
+         </dependency>
 
         <dependency>
             <groupId>org.codehaus.groovy</groupId>
