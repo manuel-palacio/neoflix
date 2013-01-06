@@ -118,8 +118,7 @@ class MovieResource {
 
             return "<a href='${movieUrl}' target='_blank'><img src='${poster}'><h3>${tagLine}</h3><p>Rating: ${rating} <br/>Rated: ${certification}</p><p>${overview}</p>"
         } catch (e) {
-            e.printStackTrace()
-            //ignore
+           print e.getMessage()
         }
 
     }
