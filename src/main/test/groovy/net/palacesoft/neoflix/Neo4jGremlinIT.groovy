@@ -13,6 +13,8 @@ public class Neo4jGremlinIT {
 
     GraphDatabase graphDb = new SpringRestGraphDatabase(System.getProperty("NEO4J_URL") + "/db/data")
     GremlinDAO dao
+    int movieId = 200
+
 
     @Before
     public void setup() {
@@ -32,7 +34,7 @@ public class Neo4jGremlinIT {
     @Test
     public void can_find_movie_by_id() {
 
-        def result = dao.findMovieById(100)
+        def result = dao.findMovieById(movieId)
 
         assert result
     }
@@ -40,18 +42,19 @@ public class Neo4jGremlinIT {
     @Test
     public void can_get_recommendations() {
 
-        def result = dao.findRecommendationsById(100)
+
+
+        def result = dao.findRecommendationsById(movieId)
 
         if (!result || !result.iterator().hasNext()) {
-            println "[{id: ${100},name: No Recommendations, values:[{id:${100}, name:No Recommendations}]}]"
+            println "[{id: ${movieId},name: No Recommendations, values:[{id:${movieId}, name:No Recommendations}]}]"
         }
 
         def jsonResult = result.collect {
             "{id:${it.key.toString().split(":")[0]},name:${it.key.toString().split(":")[1]}}"
-        }
+        }.join(",")
 
-        println "[{id:${100} ,name:Recommendations,values:${jsonResult.join(",")} }]"
+        println "[{id:${movieId} ,name:Recommendations,values:${jsonResult} }]"
 
     }
-
 }

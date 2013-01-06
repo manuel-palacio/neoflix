@@ -18,7 +18,7 @@ class CypherDAO {
 
     RestNode findMovieByTitle(title) {
         neo4jTemplate.query("START n=node:vertices(title='${URLDecoder.decode(title, "utf-8")}') RETURN n;",
-                            null).to(RestNode.class).single()
+                null).to(RestNode.class).single()
     }
 
     Result findRecommendationsById(movieId) {

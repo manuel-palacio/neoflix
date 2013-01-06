@@ -13,6 +13,8 @@ public class Neo4jCypherIT {
 
     GraphDatabase graphDb = new SpringRestGraphDatabase(System.getProperty("NEO4J_URL") + "/db/data")
     CypherDAO cypherDAO
+    int movieId = 200
+
 
     @Before
     public void setup() {
@@ -23,7 +25,7 @@ public class Neo4jCypherIT {
     @Test
     public void can_find_movie_by_id() {
 
-        def result = cypherDAO.findMovieById(100)
+        def result = cypherDAO.findMovieById(movieId)
 
 
         assert result.getProperty("title")
@@ -41,18 +43,18 @@ public class Neo4jCypherIT {
     @Test
     public void can_get_recommendations() {
 
-        def result = cypherDAO.findRecommendationsById(100)
+        def result = cypherDAO.findRecommendationsById(movieId)
 
 
         if (!result) {
-            println "[{id: ${100},name: No Recommendations, values:[{id:${movieId}, name:No Recommendations}]}]"
+            println "[{id: ${movieId},name: No Recommendations, values:[{id:${movieId}, name:No Recommendations}]}]"
         }
 
         def jsonResult = result.collect {
             "{id:${it.id},name:${it.title}}"
-        }
+        }.join(",")
 
-        println "[{id:${100} ,name:Recommendations,values:${jsonResult.join(",")} }]"
+        println "[{id:${movieId} ,name:Recommendations,values:${jsonResult} }]"
 
     }
 

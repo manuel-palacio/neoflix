@@ -61,24 +61,6 @@ class MovieResource {
 
     }
 
-
-    private def getRecommendations(long movieId) {
-
-
-        def result = dao.findRecommendationsById(movieId)
-
-        if (!result) {
-
-            return [id: movieId, name: "No Recommendations", values: [[id: movieId, name: "No Recommendations"]]]
-        }
-
-        def jsonResult = result.collect {
-            [id: it.id, name: it.title]
-        }
-
-        return [id: movieId, name: "Recommendations", values: jsonResult]
-    }
-
     @GET
     @Produces("application/json")
     public Response getMovie(@QueryParam("id") String id) {
@@ -100,9 +82,24 @@ class MovieResource {
 
 
         new ResponseBuilderImpl().entity(new JsonBuilder(json).toString()).status(200).build()
-
-
     }
+
+    private def getRecommendations(long movieId) {
+
+        def result = dao.findRecommendationsById(movieId)
+
+        if (!result) {
+
+            return [id: movieId, name: "No Recommendations", values: [[id: movieId, name: "No Recommendations"]]]
+        }
+
+        def jsonResult = result.collect {
+            [id: it.id, name: it.title]
+        }
+
+        return [id: movieId, name: "Recommendations", values: jsonResult]
+    }
+
 
     private def getPoster(RestNode node) {
         try {
@@ -116,7 +113,8 @@ class MovieResource {
             def overview = movie.overview
             def certification = movie.status
 
-            return "<a href='${movieUrl}' target='_blank'><img src='${poster}'><h3>${tagLine}</h3><p>Rating: ${rating} <br/>Rated: ${certification}</p><p>${overview}</p>"
+            return "<a href='${movieUrl}' target='_blank'><img src='${poster}'></a><h3>${tagLine}</h3>" +
+                    "<p>Rating: ${rating} <br/>Rated: ${certification}</p><p>${overview}</p>"
         } catch (e) {
            print e.getMessage()
         }
