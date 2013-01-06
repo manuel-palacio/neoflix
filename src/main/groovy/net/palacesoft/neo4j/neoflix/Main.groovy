@@ -1,4 +1,4 @@
-package net.palacesoft.neo4j.movies
+package net.palacesoft.neo4j.neoflix
 
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.webapp.WebAppContext

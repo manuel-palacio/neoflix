@@ -1,4 +1,4 @@
-package net.palacesoft.neo4j.movies
+package net.palacesoft.neo4j.neoflix
 
 import javax.servlet.http.HttpServlet
 import javax.servlet.http.HttpServletRequest
@@ -12,7 +12,7 @@ class GraphCreator extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) {
 
-        String host = "http://neoflix-groovy.herokuapp.com"
+        String host = "http://localhost:7474"
 
 
         String neoUrl = """${System.getProperty("NEO4J_URL")}/db/data/"""

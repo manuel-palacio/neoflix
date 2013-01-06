@@ -68,7 +68,7 @@
         <dependency>
             <groupId>com.github.manuel-palacio</groupId>
             <artifactId>tmdb-api</artifactId>
-            <version>0.2-SNAPSHOT</version>
+            <version>0.4-SNAPSHOT</version>
         </dependency>
 
         <dependency>
@@ -158,7 +158,7 @@
                             <extraJvmArguments>-Xmx512m</extraJvmArguments>
                             <programs>
                                 <program>
-                                    <mainClass>net.palacesoft.neo4j.movies.Main</mainClass>
+                                    <mainClass>net.palacesoft.neo4j.neoflix.Main</mainClass>
                                     <name>webapp</name>
                                 </program>
                             </programs>

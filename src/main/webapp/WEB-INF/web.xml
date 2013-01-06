@@ -7,13 +7,13 @@
         <servlet-class>com.sun.jersey.spi.container.servlet.ServletContainer</servlet-class>
         <init-param>
             <param-name>com.sun.jersey.config.property.packages</param-name>
-            <param-value>net.palacesoft.neo4j.movies</param-value>
+            <param-value>net.palacesoft.neo4j.neoflix</param-value>
         </init-param>
         <load-on-startup>1</load-on-startup>
     </servlet>
     <servlet>
         <servlet-name>GraphCreator</servlet-name>
-        <servlet-class>net.palacesoft.neo4j.movies.GraphCreator</servlet-class>
+        <servlet-class>net.palacesoft.neo4j.neoflix.GraphCreator</servlet-class>
     </servlet>
 
     <servlet-mapping>

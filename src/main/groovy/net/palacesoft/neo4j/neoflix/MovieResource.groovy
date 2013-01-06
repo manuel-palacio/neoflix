@@ -1,7 +1,8 @@
-package net.palacesoft.neo4j.movies
+package net.palacesoft.neo4j.neoflix
 
 import com.sun.jersey.core.spi.factory.ResponseBuilderImpl
 import groovy.json.JsonBuilder
+import net.palacesoft.neo4j.neoflix.dao.CypherDAO
 import net.palacesoft.tmdb.TmdbMovie
 import net.palacesoft.tmdb.model.Movie
 import org.neo4j.rest.graphdb.entity.RestNode
@@ -23,7 +24,7 @@ class MovieResource {
 
     def movieKey
 
-    def neo4jTemplate
+    CypherDAO dao
 
 
     @PostConstruct
@@ -52,27 +53,19 @@ class MovieResource {
             movieKey = System.getProperty("TMDB_KEY")
         }
 
-        println "#About to initialize using " + neoUrl
-
         GraphDatabase graphDb = new SpringRestGraphDatabase(neoUrl, neoUsername, neoPwd)
 
-        neo4jTemplate = new Neo4jTemplate(graphDb)
+        def neo4jTemplate = new Neo4jTemplate(graphDb)
+
+        dao = new CypherDAO(neo4jTemplate)
 
     }
 
 
     private def getRecommendations(long movieId) {
 
-        def cypherScript = """
-                 START movie=node:vertices(movieId={movieId})
-                 MATCH movie-->genera<--anotherMovie<-[ratedRel:rated]-person
-                 WHERE ratedRel.stars > 3
-                 RETURN anotherMovie.title as title, anotherMovie.movieId as id,
-                 COUNT(anotherMovie) as count ORDER BY count(anotherMovie) DESC LIMIT 15;
-                 """
 
-
-        def result = neo4jTemplate.query(cypherScript, ["movieId": movieId])
+        def result = dao.findRecommendationsById(movieId)
 
         if (!result) {
 
@@ -92,16 +85,17 @@ class MovieResource {
 
         RestNode node
         if (id.isNumber()) {
-            node = neo4jTemplate.query("START movie=node(${id}) RETURN movie;", null).to(RestNode.class).single()
+            node = dao.findMovieById(id)
         } else {
-            node = neo4jTemplate.query("START n=node:vertices(title='${URLDecoder.decode(id, "utf-8")}') RETURN n;", null).to(RestNode.class).single()
+            node = dao.findMovieByTitle(URLDecoder.decode(id, "utf-8"))
         }
 
 
         def json = [:]
         if (node && node.hasProperty("title")) {
             json = [details_html: "<h2>${node.getProperty("title")}</h2>${getPoster(node)}",
-                    data: [attributes: [getRecommendations(Long.parseLong(node.getProperty("movieId").toString()))], name: node.getProperty("title"), id: id]]
+                    data: [attributes: [getRecommendations(node.getId())],
+                            name: node.getProperty("title"), id: id]]
         }
 
 
@@ -115,8 +109,8 @@ class MovieResource {
             TmdbMovie tmdbMovie = new TmdbMovie(movieKey)
             Movie movie = tmdbMovie.search(node.getProperty("title").toString(), 1)[0]
 
-            def movieUrl = "http://www.themoviedb.org/movie/${movie.id}"
-            def poster = tmdbMovie.getPosterUrlForSize(movie.id, "w185")
+            def movieUrl = movie.getUrl()
+            def poster = tmdbMovie.getPosterUrlForMovieWithSize(movie.id, "w185")
             def rating = movie.vote_average
             def tagLine = movie.tagline
             def overview = movie.overview
@@ -124,6 +118,7 @@ class MovieResource {
 
             return "<a href='${movieUrl}' target='_blank'><img src='${poster}'><h3>${tagLine}</h3><p>Rating: ${rating} <br/>Rated: ${certification}</p><p>${overview}</p>"
         } catch (e) {
+            e.printStackTrace()
             //ignore
         }
 
